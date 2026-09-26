@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Petualangan Dinosaurus Ceria!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Quicksand', sans-serif;
+            background: linear-gradient(to bottom, #38bdf8, #818cf8, #34d399);
+        }
+        .title-font {
+            font-family: 'Fredoka One', cursive;
+        }
+        @keyframes floatAnim {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+        .floating {
+            animation: floatAnim 3s ease-in-out infinite;
+        }
+        @keyframes pulseScale {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+        .pulse-btn {
+            animation: pulseScale 1.5s infinite;
+        }
+    </style>
+</head>
+<body class="flex flex-col justify-between items-center h-[100dvh] w-screen p-2 sm:p-4">
+
+    <header class="w-full max-w-lg flex justify-between items-center bg-white/90 backdrop-blur-md px-3 py-2 sm:px-5 sm:py-3 rounded-full shadow-lg border-4 border-yellow-300 z-30">
+        <div class="flex items-center gap-1 sm:gap-2">
+            <span class="text-2xl sm:text-3xl">🦖</span>
+            <h1 class="title-font text-base sm:text-xl text-pink-500 drop-shadow truncate max-w-[100px] sm:max-w-none">Dino Ceria</h1>
+        </div>
+        <div class="flex items-center gap-1.5 sm:gap-3">
+            <!-- Player Tag Badge -->
+            <div class="bg-indigo-100 border-2 border-indigo-400 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full flex items-center gap-1 shadow-inner">
+                <span class="text-xs sm:text-sm">👤</span>
+                <span class="title-font text-xs sm:text-sm text-indigo-700 tracking-wide">Player : MYSUN</span>
+            </div>
+            <!-- Score Star Counter -->
+            <div class="bg-yellow-100 border-2 border-yellow-400 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full flex items-center gap-1 shadow-inner">
+                <span class="text-base sm:text-lg">⭐</span>
+                <span id="scoreDisplay" class="title-font text-sm sm:text-base text-yellow-700">0</span>
+            </div>
+            <!-- Coin Counter -->
+            <div class="bg-pink-100 border-2 border-pink-400 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full flex items-center gap-1 shadow-inner">
+                <span class="text-base sm:text-lg">🪙</span>
+                <span id="coinDisplay" class="title-font text-sm sm:text-base text-pink-600">0</span>
+            </div>
+        </div>
+    </header>
+
+    <main id="gameContainer" class="relative w-full max-w-lg flex-1 my-2 bg-gradient-to-b from-sky-200 to-sky-300 rounded-3xl shadow-2xl border-4 sm:border-8 border-white overflow-hidden flex flex-col items-center justify-center cursor-pointer max-h-[60vh] sm:max-h-[420px]">
+        
+        <!-- Background Decor Elements -->
+        <div class="absolute inset-0 pointer-events-none overflow-hidden">
+            <div class="absolute top-4 left-6 text-3xl opacity-80 floating">☁️</div>
+            <div class="absolute top-8 right-10 text-4xl opacity-70 floating" style="animation-delay: 1s;">🌈</div>
+            <div class="absolute top-2 right-1/3 text-2xl opacity-60 floating" style="animation-delay: 1.5s;">☁️</div>
+            <div class="absolute top-16 left-1/4 text-2xl opacity-70 floating" style="animation-delay: 2s;">🎈</div>
+        </div>
+
+        <!-- HTML5 Game Canvas -->
+        <canvas id="gameCanvas" class="w-full h-full block z-10"></canvas>
+
+        <!-- Overlay for Start & Game Over screens -->
+        <div id="screenOverlay" class="absolute inset-0 bg-black/40 backdrop-blur-sm z-20 flex flex-col items-center justify-center text-center p-4 transition-all duration-300">
+            <div class="bg-white p-5 sm:p-8 rounded-3xl shadow-2xl border-6 sm:border-8 border-yellow-400 max-w-sm w-full transform scale-100 transition-transform">
+                <div id="overlayIcon" class="text-5xl sm:text-6xl mb-2 floating">🦕✨</div>
+                <h2 id="overlayTitle" class="title-font text-xl sm:text-2xl text-purple-600 mb-2">Petualangan Dino!</h2>
+                <p id="overlayDesc" class="text-gray-600 text-xs sm:text-sm font-semibold mb-5">
+                    Halo <b class="text-indigo-600">MYSUN</b>! Bantu Dino melompati rintangan permen & kaktus lucu ya!
+                </p>
+                <button id="actionButton" class="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white title-font text-lg sm:text-xl py-3 sm:py-4 rounded-2xl shadow-lg border-b-4 border-purple-700 active:border-b-0 active:translate-y-1 transition-all pulse-btn cursor-pointer">
+                    Mulai Bermain! 🚀
+                </button>
+            </div>
+        </div>
+
+        <!-- Touch Hint Badge -->
+        <div class="absolute bottom-2 right-3 z-10 pointer-events-none opacity-60 text-[10px] sm:text-xs font-bold text-indigo-900 bg-white/80 px-2.5 py-1 rounded-full">
+            Sentuh Layar untuk Lompat 👆
+        </div>
+    </main>
+
+    <footer class="w-full max-w-lg flex flex-col gap-2 bg-white/90 backdrop-blur-md px-4 py-3 sm:px-6 sm:py-4 rounded-3xl shadow-lg border-4 border-indigo-200 z-30">
+        <button id="jumpButton" class="w-full bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-white title-font text-xl sm:text-2xl py-4 sm:py-5 rounded-2xl shadow-lg border-b-4 border-orange-600 active:border-b-0 active:translate-y-1 transition-all flex items-center justify-center gap-3 cursor-pointer select-none">
+            <span class="text-2xl sm:text-3xl">🦘</span> LOMPAT SEKARANG!
+        </button>
+    </footer>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const coinDisplay = document.getElementById('coinDisplay');
+        const screenOverlay = document.getElementById('screenOverlay');
+        const overlayTitle = document.getElementById('overlayTitle');
+        const overlayDesc = document.getElementById('overlayDesc');
+        const overlayIcon = document.getElementById('overlayIcon');
+        const actionButton = document.getElementById('actionButton');
+        const jumpButton = document.getElementById('jumpButton');
+        const gameContainer = document.getElementById('gameContainer');
+
+        // Background Music Audio Element
+        const bgMusic = new Audio('https://files.catbox.moe/a742my.mp3');
+        bgMusic.loop = true;
+        bgMusic.volume = 0.5;
+
+        // Web Audio API Synthesizer for jump, coin, and hit sound effects
+        let audioCtx = null;
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playSound(type) {
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                const now = audioCtx.currentTime;
+
+                if (type === 'jump') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(320, now);
+                    osc.frequency.exponentialRampToValueAtTime(650, now + 0.15);
+                    gainNode.gain.setValueAtTime(0.25, now);
+                    gainNode.gain.linearRampToValueAtTime(0, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } else if (type === 'coin') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(587.33, now);
+                    osc.frequency.setValueAtTime(880, now + 0.08);
+                    gainNode.gain.setValueAtTime(0.2, now);
+                    gainNode.gain.linearRampToValueAtTime(0, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'hit') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(180, now);
+                    osc.frequency.linearRampToValueAtTime(60, now + 0.3);
+                    gainNode.gain.setValueAtTime(0.3, now);
+                    gainNode.gain.linearRampToValueAtTime(0, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                }
+            } catch (e) {
+                console.error("Audio error:", e);
+            }
+        }
+
+        let gameState = 'START'; // START, PLAYING, GAMEOVER
+        let score = 0;
+        let coins = 0;
+        let gameSpeed = 5;
+        let frameCount = 0;
+
+        const dino = {
+            x: 40,
+            y: 0,
+            width: 48,
+            height: 52,
+            vy: 0,
+            gravity: 0.65,
+            jumpForce: -12,
+            isJumping: false,
+            legFrame: 0
+        };
+
+        let obstacles = [];
+        let collectibles = [];
+        let particles = [];
+
+        // Perfect fullscreen high-DPI canvas resizing
+        function resizeCanvas() {
+            const rect = gameContainer.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+            dino.y = canvas.height - 70 - dino.height;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('orientationchange', () => {
+            setTimeout(resizeCanvas, 200);
+        });
+        resizeCanvas();
+
+        function initGame() {
+            score = 0;
+            coins = 0;
+            gameSpeed = 5;
+            obstacles = [];
+            collectibles = [];
+            particles = [];
+            frameCount = 0;
+            dino.y = canvas.height - 70 - dino.height;
+            dino.vy = 0;
+            dino.isJumping = false;
+            updateUI();
+        }
+
+        function updateUI() {
+            scoreDisplay.innerText = Math.floor(score);
+            coinDisplay.innerText = coins;
+        }
+
+        function triggerJump(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            initAudio();
+
+            if (gameState === 'START' || gameState === 'GAMEOVER') {
+                startGame();
+                return;
+            }
+
+            if (!dino.isJumping) {
+                dino.vy = dino.jumpForce;
+                dino.isJumping = true;
+                playSound('jump');
+                
+                for(let i = 0; i < 5; i++) {
+                    particles.push({
+                        x: dino.x + 20,
+                        y: dino.y + dino.height,
+                        vx: (Math.random() - 0.5) * 4,
+                        vy: Math.random() * -2,
+                        radius: Math.random() * 4 + 2,
+                        color: '#ffffff',
+                        alpha: 1
+                    });
+                }
+            }
+        }
+
+        // Instant Zero-Delay Mobile Touch & Click Listeners
+        jumpButton.addEventListener('touchstart', triggerJump, { passive: false });
+        jumpButton.addEventListener('pointerdown', triggerJump, { passive: false });
+
+        gameContainer.addEventListener('touchstart', (e) => {
+            if (e.target !== actionButton) {
+                triggerJump(e);
+            }
+        }, { passive: false });
+
+        gameContainer.addEventListener('pointerdown', (e) => {
+            if (e.target !== actionButton) {
+                triggerJump(e);
+            }
+        }, { passive: false });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.code === 'ArrowUp') {
+                triggerJump(e);
+            }
+        });
+
+        actionButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            startGame();
+        });
+
+        function startGame() {
+            initGame();
+            gameState = 'PLAYING';
+            screenOverlay.classList.add('opacity-0', 'pointer-events-none');
+            
+            // Play background music
+            bgMusic.currentTime = 0;
+            bgMusic.play().catch(err => console.log("BGM autoplay prevented:", err));
+        }
+
+        function gameOver() {
+            gameState = 'GAMEOVER';
+            playSound('hit');
+            
+            // Stop background music
+            bgMusic.pause();
+
+            overlayIcon.innerText = '🥺';
+            overlayTitle.innerText = 'Wah, Kena Rintangan!';
+            overlayDesc.innerHTML = `Hebat Player <b class="text-indigo-600">MYSUN</b>!<br>Skor akhir: <b class="text-pink-500">${Math.floor(score)}</b> | Bintang: <b class="text-yellow-500">${coins} ⭐</b>`;
+            actionButton.innerText = 'Main Lagi Yuk! 🔄';
+            screenOverlay.classList.remove('opacity-0', 'pointer-events-none');
+        }
+
+        function spawnObstacle() {
+            const types = ['cactus', 'candy', 'mushroom'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            
+            let width = 38;
+            let height = 48;
+            if (type === 'candy') { width = 42; height = 42; }
+            if (type === 'mushroom') { width = 42; height = 42; }
+
+            obstacles.push({
+                x: canvas.width + 40,
+                y: canvas.height - 70 - height,
+                width: width,
+                height: height,
+                type: type
+            });
+        }
+
+        function spawnCollectible() {
+            collectibles.push({
+                x: canvas.width + 40,
+                y: canvas.height - 150 - Math.random() * 70,
+                width: 28,
+                height: 28,
+                collected: false
+            });
+        }
+
+        function update() {
+            if (gameState !== 'PLAYING') return;
+
+            frameCount++;
+            score += 0.12;
+            gameSpeed = 5.5 + Math.floor(score / 90) * 0.5;
+
+            if (Math.floor(score) % 100 === 0) {
+                updateUI();
+            }
+            scoreDisplay.innerText = Math.floor(score);
+
+            dino.y += dino.vy;
+            dino.vy += dino.gravity;
+
+            const groundLevel = canvas.height - 70 - dino.height;
+            if (dino.y >= groundLevel) {
+                dino.y = groundLevel;
+                dino.vy = 0;
+                dino.isJumping = false;
+            }
+
+            if (frameCount % 8 === 0 && !dino.isJumping) {
+                dino.legFrame = (dino.legFrame + 1) % 2;
+            }
+
+            if (frameCount % Math.max(65, 120 - Math.floor(score / 8)) === 0) {
+                spawnObstacle();
+            }
+
+            if (frameCount % 85 === 0) {
+                spawnCollectible();
+            }
+
+            // Obstacle collision
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                let obs = obstacles[i];
+                obs.x -= gameSpeed;
+
+                const padding = 10;
+                if (
+                    dino.x + padding < obs.x + obs.width - padding &&
+                    dino.x + dino.width - padding > obs.x + padding &&
+                    dino.y + padding < obs.y + obs.height - padding &&
+                    dino.y + dino.height - padding > obs.y + padding
+                ) {
+                    gameOver();
+                }
+
+                if (obs.x + obs.width < 0) {
+                    obstacles.splice(i, 1);
+                }
+            }
+
+            // Collectibles collision
+            for (let i = collectibles.length - 1; i >= 0; i--) {
+                let col = collectibles[i];
+                col.x -= gameSpeed;
+
+                if (
+                    !col.collected &&
+                    dino.x < col.x + col.width &&
+                    dino.x + dino.width > col.x &&
+                    dino.y < col.y + col.height &&
+                    dino.y + dino.height > col.y
+                ) {
+                    col.collected = true;
+                    coins++;
+                    coinDisplay.innerText = coins;
+                    playSound('coin');
+
+                    for(let j = 0; j < 6; j++) {
+                        particles.push({
+                            x: col.x + 14,
+                            y: col.y + 14,
+                            vx: (Math.random() - 0.5) * 6,
+                            vy: (Math.random() - 0.5) * 6,
+                            radius: Math.random() * 4 + 2,
+                            color: '#ffd700',
+                            alpha: 1
+                        });
+                    }
+                }
+
+                if (col.x + col.width < 0 || col.collected) {
+                    collectibles.splice(i, 1);
+                }
+            }
+
+            // Particles update
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                if (p) {
+                    p.x += p.vx || 0;
+                    p.y += p.vy || 0;
+                    p.alpha -= 0.035;
+                    if (p.alpha <= 0) {
+                        particles.splice(i, 1);
+                    }
+                }
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Ground
+            const groundY = canvas.height - 70;
+            ctx.fillStyle = '#4ade80';
+            ctx.fillRect(0, groundY, canvas.width, 14);
+            ctx.fillStyle = '#d97706';
+            ctx.fillRect(0, groundY + 14, canvas.width, 56);
+
+            ctx.fillStyle = '#b45309';
+            for (let i = ((-frameCount * gameSpeed) % 40); i < canvas.width; i += 40) {
+                ctx.beginPath();
+                ctx.arc(i + 15, groundY + 30, 3.5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Dino
+            ctx.save();
+            ctx.translate(dino.x, dino.y);
+
+            ctx.fillStyle = '#2dd4bf';
+            ctx.beginPath();
+            ctx.roundRect(8, 12, 30, 30, 9);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.roundRect(22, 0, 22, 22, 7);
+            ctx.fill();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(36, 8, 4.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#1e293b';
+            ctx.beginPath();
+            ctx.arc(38, 8, 1.8, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#f472b6';
+            ctx.beginPath();
+            ctx.arc(38, 14, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#14b8a6';
+            ctx.beginPath();
+            ctx.moveTo(10, 22);
+            ctx.lineTo(1, 18);
+            ctx.lineTo(8, 30);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.fillStyle = '#f43f5e';
+            ctx.beginPath();
+            ctx.moveTo(12, 12); ctx.lineTo(17, 6); ctx.lineTo(22, 12);
+            ctx.moveTo(22, 12); ctx.lineTo(27, 6); ctx.lineTo(32, 12);
+            ctx.fill();
+
+            ctx.fillStyle = '#0f766e';
+            if (dino.isJumping) {
+                ctx.fillRect(12, 42, 7, 7);
+                ctx.fillRect(25, 42, 7, 7);
+            } else {
+                if (dino.legFrame === 0) {
+                    ctx.fillRect(12, 42, 7, 9);
+                    ctx.fillRect(27, 42, 7, 6);
+                } else {
+                    ctx.fillRect(12, 42, 7, 6);
+                    ctx.fillRect(27, 42, 7, 9);
+                }
+            }
+            ctx.restore();
+
+            // Obstacles
+            obstacles.forEach(obs => {
+                ctx.save();
+                if (obs.type === 'cactus') {
+                    ctx.fillStyle = '#10b981';
+                    ctx.beginPath();
+                    ctx.roundRect(obs.x + 8, obs.y + 8, 18, obs.height - 8, 6);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.roundRect(obs.x, obs.y + 12, 10, 14, 5);
+                    ctx.fill();
+                    ctx.beginPath();
+                    ctx.roundRect(obs.x + 22, obs.y + 18, 10, 14, 5);
+                    ctx.fill();
+                    ctx.fillStyle = '#065f46';
+                    ctx.fillRect(obs.x + 13, obs.y + 16, 2.5, 2.5);
+                    ctx.fillRect(obs.x + 19, obs.y + 16, 2.5, 2.5);
+                } else if (obs.type === 'candy') {
+                    ctx.fillStyle = '#ec4899';
+                    ctx.beginPath();
+                    ctx.arc(obs.x + 21, obs.y + 21, 16, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#fbcfe8';
+                    ctx.beginPath();
+                    ctx.arc(obs.x + 21, obs.y + 21, 9, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    ctx.fillStyle = '#ef4444';
+                    ctx.beginPath();
+                    ctx.arc(obs.x + 21, obs.y + 16, 16, Math.PI, 0, false);
+                    ctx.fill();
+                    ctx.fillStyle = '#fef08a';
+                    ctx.beginPath();
+                    ctx.arc(obs.x + 14, obs.y + 14, 3.5, 0, Math.PI * 2);
+                    ctx.arc(obs.x + 26, obs.y + 11, 2.5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#fdf6e2';
+                    ctx.fillRect(obs.x + 16, obs.y + 18, 10, 22);
+                }
+                ctx.restore();
+            });
+
+            // Collectibles
+            collectibles.forEach(col => {
+                if (!col.collected) {
+                    ctx.save();
+                    ctx.translate(col.x + 14, col.y + 14);
+                    ctx.rotate(frameCount * 0.05);
+                    ctx.fillStyle = '#facc15';
+                    ctx.beginPath();
+                    for (let i = 0; i < 5; i++) {
+                        ctx.lineTo(Math.cos((i * 4 * Math.PI) / 5) * 12, Math.sin((i * 4 * Math.PI) / 5) * 12);
+                        ctx.lineTo(Math.cos(((i + 0.5) * 4 * Math.PI) / 5) * 5, Math.sin(((i + 0.5) * 4 * Math.PI) / 5) * 5);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+                }
+            });
+
+            // Particles
+            particles.forEach(p => {
+                ctx.save();
+                ctx.globalAlpha = p.alpha;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        requestAnimationFrame(loop);
+    </script>
+</body>
+</html>
