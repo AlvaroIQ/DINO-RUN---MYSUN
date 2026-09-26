@@ -87,7 +87,7 @@
                 <div id="overlayIcon" class="text-5xl sm:text-6xl mb-2 floating">🦕✨</div>
                 <h2 id="overlayTitle" class="title-font text-xl sm:text-2xl text-purple-600 mb-2">Petualangan Dino!</h2>
                 <p id="overlayDesc" class="text-gray-600 text-xs sm:text-sm font-semibold mb-5">
-                    Halo <b class="text-indigo-600">MYSUN</b>! Bantu Dino melompati rintangan permen & kaktus lucu ya!
+                    Halo <b class="text-indigo-600">MYSUN</b>! Bantu Dino melompati rintangan permen & kaktus lucu dengan tempo santai ya!
                 </p>
                 <button id="actionButton" class="w-full bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white title-font text-lg sm:text-xl py-3 sm:py-4 rounded-2xl shadow-lg border-b-4 border-purple-700 active:border-b-0 active:translate-y-1 transition-all pulse-btn cursor-pointer">
                     Mulai Bermain! 🚀
@@ -179,7 +179,7 @@
         let gameState = 'START'; // START, PLAYING, GAMEOVER
         let score = 0;
         let coins = 0;
-        let gameSpeed = 5;
+        let gameSpeed = 3.6; // Reduced initial speed for young kids (gentle pace)
         let frameCount = 0;
 
         const dino = {
@@ -188,8 +188,8 @@
             width: 48,
             height: 52,
             vy: 0,
-            gravity: 0.65,
-            jumpForce: -12,
+            gravity: 0.58, // Softer gravity for smoother floaty jumps
+            jumpForce: -11.5,
             isJumping: false,
             legFrame: 0
         };
@@ -215,7 +215,7 @@
         function initGame() {
             score = 0;
             coins = 0;
-            gameSpeed = 5;
+            gameSpeed = 3.6; // Gentle initial speed
             obstacles = [];
             collectibles = [];
             particles = [];
@@ -346,8 +346,9 @@
             if (gameState !== 'PLAYING') return;
 
             frameCount++;
-            score += 0.12;
-            gameSpeed = 5.5 + Math.floor(score / 90) * 0.5;
+            score += 0.08;
+            // Very gradual speed increment so it stays comfortable for kids
+            gameSpeed = 3.6 + Math.min(2.0, Math.floor(score / 120) * 0.3);
 
             if (Math.floor(score) % 100 === 0) {
                 updateUI();
@@ -364,15 +365,16 @@
                 dino.isJumping = false;
             }
 
-            if (frameCount % 8 === 0 && !dino.isJumping) {
+            if (frameCount % 10 === 0 && !dino.isJumping) {
                 dino.legFrame = (dino.legFrame + 1) % 2;
             }
 
-            if (frameCount % Math.max(65, 120 - Math.floor(score / 8)) === 0) {
+            // Slower spawn frequency to allow reaction time
+            if (frameCount % Math.max(90, 160 - Math.floor(score / 10)) === 0) {
                 spawnObstacle();
             }
 
-            if (frameCount % 85 === 0) {
+            if (frameCount % 110 === 0) {
                 spawnCollectible();
             }
 
@@ -381,7 +383,7 @@
                 let obs = obstacles[i];
                 obs.x -= gameSpeed;
 
-                const padding = 10;
+                const padding = 12; // forgiving hit-box
                 if (
                     dino.x + padding < obs.x + obs.width - padding &&
                     dino.x + dino.width - padding > obs.x + padding &&
